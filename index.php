@@ -2,14 +2,14 @@
 include 'config/db.php';
 include 'includes/header.php';
 
-// Capture request fields safely
+// Capture system retrieval request fields safely
 $tbr_keyword = isset($_GET['tbr_keyword']) ? trim($_GET['tbr_keyword']) : '';
 $abr_resolution = isset($_GET['abr_resolution']) ? $_GET['abr_resolution'] : 'Any';
 $abr_gender = isset($_GET['abr_gender']) ? $_GET['abr_gender'] : 'Any';
 $abr_max_size = isset($_GET['abr_max_size']) ? floatval($_GET['abr_max_size']) : 1000.00; 
 $cbr_color = isset($_GET['cbr_color']) ? $_GET['cbr_color'] : 'All';
 
-// SQL Ingestion Layer Logic
+// SQL Architecture Builder Layer
 $query = "SELECT V.*, S.Name, S.Gender, T.Thumbnail_Path, T.Dominant_Colour 
           FROM VIDEO V
           JOIN STUDENT S ON V.StudentID = S.StudentID
@@ -94,7 +94,6 @@ $result = $stmt->get_result();
             </aside>
 
             <main class="col p-5 overflow-auto">
-                
                 <form method="GET" action="index.php" class="mb-5">
                     <input type="hidden" name="abr_resolution" value="<?php echo $abr_resolution; ?>">
                     <input type="hidden" name="abr_gender" value="<?php echo $abr_gender; ?>">
@@ -115,7 +114,6 @@ $result = $stmt->get_result();
                         <p class="text-secondary small mb-0">Browse student portfolio videos inside the repository.</p>
                     </div>
                     <button class="btn btn-primary btn-md fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></svg>
                         Upload Video
                     </button>
                 </div>
@@ -124,18 +122,19 @@ $result = $stmt->get_result();
                     <?php if ($result->num_rows > 0): ?>
                         <?php while($row = $result->fetch_assoc()): ?>
                             <div class="col-sm-6 col-md-4 col-xl-3">
-                                <div class="card card-portfolio shadow-sm">
-                                    <div class="thumb-container" style="background-color: <?php echo ($row['Dominant_Colour']=='Blue')?'#1e293b':(($row['Dominant_Colour']=='Yellow')?'#42310c':'#14291a'); ?>; border-bottom: 1px solid #23293d;">
-                                        
+                                <div class="card card-portfolio shadow-sm h-100" style="cursor: pointer;" 
+                                     onclick="playVideo('<?php echo htmlspecialchars($row['Video_Path'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($row['Title'], ENT_QUOTES); ?>')">
+                                    
+                                    <div class="thumb-container" style="border-bottom: 1px solid #23293d; background-color: #0f111a;">
                                         <?php if (!empty($row['Thumbnail_Path']) && file_exists($row['Thumbnail_Path'])): ?>
-                                            <img src="<?php echo $row['Thumbnail_Path']; ?>" alt="Thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <img src="<?php echo $row['Thumbnail_Path']; ?>" alt="Video Thumbnail" style="width:100%; height:100%; object-fit:cover;">
                                         <?php else: ?>
                                             <svg xmlns="http://www.w3.org/2000/svg" class="text-white opacity-25" width="48" height="48" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4v16a1 1 0 0 0 1.524 .852l11 -8a1 1 0 0 0 0 -1.704l-11 -8a1 1 0 0 0 -1.524 .852z" /></svg>
                                         <?php endif; ?>
-
                                         <span class="badge bg-dark bg-opacity-70 text-white border border-secondary position-absolute top-0 start-0 m-3"><?php echo $row['Resolution']; ?></span>
                                         <span class="badge bg-black text-white position-absolute bottom-0 end-0 m-3 font-monospace" style="font-size:11px;"><?php echo gmdate("i:s", $row['Duration_Seconds']); ?></span>
                                     </div>
+
                                     <div class="card-body p-4 d-flex flex-column justify-content-between">
                                         <div class="mb-3">
                                             <h4 class="text-white fw-bold mb-1 text-truncate"><?php echo htmlspecialchars($row['Title']); ?></h4>
@@ -152,7 +151,7 @@ $result = $stmt->get_result();
                         <?php endwhile; ?>
                     <?php else: ?>
                         <div class="col-12 text-center py-5 border border-dashed rounded bg-dark bg-opacity-50">
-                            <p class="text-muted mb-0">No student presentation files match the active matrix framework filtering constraints.</p>
+                            <p class="text-muted mb-0">No portfolios match your filter parameters matrix.</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -161,11 +160,28 @@ $result = $stmt->get_result();
     </div>
 </div>
 
+<div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border border-secondary text-white rounded-3 shadow-lg">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold" id="playerVideoTitle">Streaming Portfolio Asset</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideo()"></button>
+            </div>
+            <div class="modal-body p-0 bg-black d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                <video id="portfolioVideoPlayer" controls width="100%" class="rounded-bottom">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your current browser workspace environment fails to execute native HTML5 video layers.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border border-secondary p-2 rounded-3 text-white">
             <div class="modal-header border-bottom border-secondary pb-2">
-                <h5 class="modal-title fw-bold">📤 Intake Pipeline Controller</h5>
+                <h5 class="modal-title fw-bold">📤 Ingestion Pipeline Gateway</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body pt-3">
@@ -182,7 +198,7 @@ $result = $stmt->get_result();
                         <label class="form-label small text-secondary fw-bold">Select File (MP4, MOV, WEBM)</label>
                         <input type="file" name="video_file" class="form-control form-dark" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold mt-2 py-2">Ingest File Asset</button>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold mt-2 py-2">Process Asset Intake</button>
                 </form>
             </div>
         </div>
@@ -194,6 +210,40 @@ function selectColor(color) {
     document.getElementById('cbr_color_input').value = color;
     document.getElementById('filterForm').submit();
 }
+
+// Controller logic to dynamically load and play the video track asset
+// Upgraded Controller: Swaps and loads multimedia video streams instantly
+function playVideo(videoPath, videoTitle) {
+    const playerModal = new bootstrap.Modal(document.getElementById('playerModal'));
+    const videoElement = document.getElementById('portfolioVideoPlayer');
+    const titleElement = document.getElementById('playerVideoTitle');
+
+    titleElement.textContent = "🎬 Playing: " + videoTitle;
+    
+    // THE FIX: Apply the video source path string directly to the main video selector object
+    videoElement.src = videoPath;
+    
+    videoElement.load();
+    playerModal.show();
+    
+    // Automatically attempt execution play stream
+    videoElement.play().catch(function(error) {
+        console.log("Browser playback focus rules require user interaction baseline:", error);
+    });
+}
+
+// Ensure the binary video soundtrack stops instantly if the user clicks close
+function stopVideo() {
+    const videoElement = document.getElementById('portfolioVideoPlayer');
+    videoElement.pause();
+    videoElement.src = "";
+    videoElement.load();
+}
+
+// Extra listener protection layer if they click the background overlay mask to dismiss
+document.getElementById('playerModal').addEventListener('hidden.bs.modal', function () {
+    stopVideo();
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>
