@@ -162,10 +162,23 @@ $result = $stmt->get_result();
                     <?php if ($result->num_rows > 0): ?>
                         <?php while ($row = $result->fetch_assoc()): ?>
                             <div class="col-sm-6 col-lg-4">
-                                <div class="card card-video" style="cursor: pointer;" onclick="playVideo('<?php echo htmlspecialchars($row['Video_Path']); ?>', '<?php echo htmlspecialchars(addslashes($row['Title'])); ?>')">
+                                <div class="card card-video h-100" style="cursor: pointer;" onclick="playVideo('<?php echo htmlspecialchars($row['Video_Path']); ?>', '<?php echo htmlspecialchars(addslashes($row['Title'])); ?>')">
                                     
-                                    <div class="thumb-container">
-                                        <img src="<?php echo $row['Thumbnail_Path']; ?>" alt="Video Preview" style="width:100%; height:100%; object-fit:cover;">
+                                    <div class="thumb-container" style="border-bottom: 1px solid #23293d; background-color: #090a10; position: relative; overflow: hidden; height: 170px; pointer-events: none;">
+                                        
+                                        <video class="preview-video-source" 
+                                               src="<?php echo htmlspecialchars($row['Video_Path']); ?>" 
+                                               preload="metadata" 
+                                               muted 
+                                               data-duration="<?php echo intval($row['Duration_Seconds']); ?>"
+                                               style="display: none;"></video>
+                                        
+                                        <div class="video-thumbnail-canvas-target w-100 h-100" style="background-position: center; background-size: cover;">
+                                            <div class="d-flex align-items-center justify-content-center h-100 opacity-25">
+                                                <div class="spinner-border text-light spinner-border-sm" role="status"></div>
+                                            </div>
+                                        </div>
+                                        
                                         <span class="badge bg-dark bg-opacity-70 text-white border border-secondary position-absolute top-0 start-0 m-3"><?php echo $row['Resolution']; ?></span>
                                         <span class="badge bg-black text-white position-absolute bottom-0 end-0 m-3 font-monospace" style="font-size:11px; font-weight: bold; padding: 2px 5px; border-radius: 4px;"><?php echo gmdate("i:s", $row['Duration_Seconds']); ?></span>
                                     </div>
@@ -241,7 +254,7 @@ $result = $stmt->get_result();
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content" style="background-color: #0b0c14; border-color: #252a45;">
             <div class="modal-header border-bottom border-dark py-2">
-                <h5 class="modal-title text-white fw-bold font-sans" id="playerVideoTitle">🎬 Playing Asset Stream</h5>
+                <h5 class="modal-title text-white fw-bold" id="playerVideoTitle">🎬 Playing Asset Stream</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopVideoPlayer()"></button>
             </div>
             <div class="modal-body p-0 bg-black">
@@ -266,20 +279,18 @@ function selectColor(color) {
     document.getElementById('filterForm').submit();
 }
 
-// Fixed Playback Module: Flushes memory buffers and streams file links cleanly
 function playVideo(videoPath, videoTitle) {
     const videoPlayer = document.getElementById('portfolioVideoPlayer');
     document.getElementById('playerVideoTitle').textContent = "🎬 Playing: " + videoTitle;
     
-    // Inject streaming path variable explicitly onto player object
     videoPlayer.src = videoPath;
     videoPlayer.load();
     
-    const playbackModal = new tabler.Modal(document.getElementById('playerModal'));
+    const playbackModal = new bootstrap.Modal(document.getElementById('playerModal'));
     playbackModal.show();
     
     videoPlayer.play().catch(function(err) {
-        console.log("Browser autofocus constraints intercepted absolute auto-execution:", err);
+        console.log("Browser autofocus constraints intercepted auto-execution:", err);
     });
 }
 
@@ -289,9 +300,103 @@ function stopVideoPlayer() {
     videoPlayer.src = ""; // Flush memory buffer allocations immediately on close window actions
 }
 
-// Bind close events to player modal object boundaries
 document.getElementById('playerModal').addEventListener('hidden.bs.modal', function () {
     stopVideoPlayer();
+});
+
+// Advanced Video Contrast Analyzer Framework - Stable Lifecyle Grade
+document.addEventListener("DOMContentLoaded", function() {
+    const videos = document.querySelectorAll(".preview-video-source");
+
+    videos.forEach(video => {
+        // THE FIX: Wrap the execution pipeline inside a loadedmetadata listener 
+        // This forces the browser to wait until the fresh video file size and boundaries are fully active.
+        video.addEventListener("loadedmetadata", function initializeAnalysis() {
+            video.removeEventListener("loadedmetadata", initializeAnalysis); // Clean up event execution
+
+            const totalDuration = parseInt(video.getAttribute("data-duration")) || video.duration || 10;
+            
+            // Define multi-point timeline sampling targets (skipping intro/outro segments)
+            const samplePoints = [
+                totalDuration * 0.2,
+                totalDuration * 0.4,
+                totalDuration * 0.6,
+                totalDuration * 0.8
+            ];
+            
+            let currentSampleIdx = 0;
+            let highestContrastValue = -1;
+            let bestFrameDataURL = "";
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 320;
+            canvas.height = 180;
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+            // Trigger the analysis loop sequence
+            video.currentTime = samplePoints[currentSampleIdx];
+
+            video.addEventListener("seeked", function analyzeFrame() {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                try {
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const pixels = imgData.data;
+                    
+                    let totalLuminance = 0;
+                    let sampleSize = 0;
+                    
+                    for (let i = 0; i < pixels.length; i += 16) {
+                        const r = pixels[i];
+                        const g = pixels[i+1];
+                        const b = pixels[i+2];
+                        
+                        // ITU BT.709 Perceptual Brightness formula structure
+                        const luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+                        totalLuminance += luminance;
+                        sampleSize++;
+                    }
+                    
+                    const meanLuminance = totalLuminance / sampleSize;
+                    
+                    let varianceSum = 0;
+                    for (let i = 0; i < pixels.length; i += 16) {
+                        const r = pixels[i];
+                        const g = pixels[i+1];
+                        const b = pixels[i+2];
+                        const luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+                        varianceSum += Math.pow(luminance - meanLuminance, 2);
+                    }
+                    
+                    const rmsContrast = Math.sqrt(varianceSum / sampleSize);
+
+                    if (rmsContrast > highestContrastValue) {
+                        highestContrastValue = rmsContrast;
+                        bestFrameDataURL = canvas.toDataURL("image/jpeg", 0.85);
+                    }
+                } catch (e) {
+                    console.warn("Cross-Origin security policies limited raw context inspection loops:", e);
+                }
+
+                currentSampleIdx++;
+                if (currentSampleIdx < samplePoints.length) {
+                    video.currentTime = samplePoints[currentSampleIdx];
+                } else {
+                    video.removeEventListener("seeked", analyzeFrame);
+                    const targetDisplayContainer = video.nextElementSibling;
+                    if (bestFrameDataURL) {
+                        targetDisplayContainer.innerHTML = ""; 
+                        targetDisplayContainer.style.backgroundImage = `url(${bestFrameDataURL})`;
+                    }
+                }
+            });
+        });
+
+        // Safety trigger fallback: If the browser already had the item cached, kickstart the event manually
+        if (video.readyState >= 1) {
+            video.dispatchEvent(new Event('loadedmetadata'));
+        }
+    });
 });
 </script>
 </body>
