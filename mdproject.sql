@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 17, 2026 at 09:01 AM
+-- Generation Time: Jun 17, 2026 at 09:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,7 +42,7 @@ INSERT INTO `student` (`StudentID`, `Name`, `Gender`) VALUES
 ('B032410002', 'Muhammad Haikal Bin Mahadzir', 'Male'),
 ('B032410185', 'Muhammad Aidil Amani Bin Abdul Rahman', 'Male'),
 ('B032410186', 'Adam Bin Azmi', 'Male'),
-('B032410200', 'Muhammad Rukaini Aidil Bin Redzuan', 'Male'),
+('B032410200', 'Muhammad Rukaini Aidil bin Redzuan', 'Male'),
 ('B032410999', 'Amina Yusuf', 'Female');
 
 -- --------------------------------------------------------
@@ -70,7 +70,9 @@ INSERT INTO `thumbnail` (`ThumbnailID`, `VideoID`, `Thumbnail_Path`, `Is_Generat
 (13, 14, 'uploads/thumbnails/thumb4.jpg.png', 1, 'Yellow', '2s'),
 (14, 15, 'uploads/thumbnails/thumb4.jpg.png', 1, 'Green', '2s'),
 (15, 16, 'uploads/thumbnails/thumb2.jpg.png', 1, 'Yellow', '2s'),
-(16, 17, 'uploads/thumbnails/thumb4.jpg.png', 1, 'Yellow', '2s');
+(16, 17, 'uploads/thumbnails/thumb4.jpg.png', 1, 'Yellow', '2s'),
+(17, 18, 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500', 1, 'Yellow', '2s'),
+(18, 19, 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500', 1, 'Green', '2s');
 
 -- --------------------------------------------------------
 
@@ -102,7 +104,9 @@ INSERT INTO `video` (`VideoID`, `StudentID`, `Title`, `Description`, `Renamed_Fi
 (14, 'B032410200', 'Test', 'Student presentation review path archive file.', 'B032410200_MDB_20260614_184010.mp4', 'uploads/videos/B032410200_MDB_20260614_184010.mp4', 19.51, 336, '0', '1080p', '2026-06-15'),
 (15, 'B032410200', 'Test', 'Student presentation review path archive file.', 'B032410200_MDB_20260614_185231.mp4', 'uploads/videos/B032410200_MDB_20260614_185231.mp4', 3.14, 322, '0', '1080p', '2026-06-15'),
 (16, 'B032410200', 'Test', 'Student presentation review path archive file.', 'B032410200_MDB_20260614_185248.mp4', 'uploads/videos/B032410200_MDB_20260614_185248.mp4', 5.20, 377, '0', '1080p', '2026-06-15'),
-(17, 'B032410200', 'Test', 'Student presentation review path archive file.', 'B032410200_MDB_20260614_185308.mkv', 'uploads/videos/B032410200_MDB_20260614_185308.mkv', 4.30, 206, '0', '1080p', '2026-06-15');
+(17, 'B032410200', 'Test', 'Student presentation review path archive file.', 'B032410200_MDB_20260614_185308.mkv', 'uploads/videos/B032410200_MDB_20260614_185308.mkv', 4.30, 206, '0', '1080p', '2026-06-15'),
+(18, 'B032410200', 'Database Normalization Explained', 'A deep dive into 1NF, 2NF, and 3NF database structures.', 'B032410200_20260521_060526_IMG_2996 (1) (1) (1).mp4', 'https://bitp3353.utem.edu.my/2026/all/uploads/videos/B032410200_20260521_060526_IMG_2996+%281%29+%281%29+%281%29.mp4', 89.63, 642, '0', '1080p', '2026-06-17'),
+(19, 'B032410185', 'Network Topologies Deep Dive', 'Comprehensive look into Star, Mesh, and Hybrid computer networking.', 'B032410185_network_presentation.mp4', 'https://bitp3353.utem.edu.my/2026/all/uploads/videos/B032410185_network_presentation.mp4', 74.20, 1264, '0', '1080p', '2026-06-17');
 
 --
 -- Indexes for dumped tables
@@ -136,13 +140,13 @@ ALTER TABLE `video`
 -- AUTO_INCREMENT for table `thumbnail`
 --
 ALTER TABLE `thumbnail`
-  MODIFY `ThumbnailID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `ThumbnailID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `video`
 --
 ALTER TABLE `video`
-  MODIFY `VideoID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `VideoID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables

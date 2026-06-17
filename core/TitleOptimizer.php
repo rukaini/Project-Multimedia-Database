@@ -1,23 +1,28 @@
 <?php
-/**
- * Metadata Processing Module
- * Optimizes titles automatically based on incoming lecturer structure guidelines
- */
 class TitleOptimizer {
-    
-    public static function cleanAndOptimize($rawTitle, $subjectCode = "BITP3353") {
-        // Trims white space and strips accidental double-extensions or jumbled characters
-        $cleanTitle = trim(preg_replace('/[^A-Za-z0-9 ]/', '', $rawTitle));
+    public static function cleanAndOptimize($filename) {
+        // Remove file format extensions
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
         
-        // Capitalizes words beautifully for the video card dashboard layout display
-        $cleanTitle = ucwords(strtolower($cleanTitle));
+        // Remove duplicate windows brackets like (1) (1)
+        $cleanString = preg_replace('/\s*\(\d+\)\s*/', '', $nameWithoutExt);
         
-        // Fallback check: If title is empty, generate an architectural default
-        if (empty($cleanTitle)) {
-            $cleanTitle = "Untitled Portfolio Project";
+        // Split strings by underscores or dashes
+        $parts = explode('_', $cleanString);
+        
+        // Reassemble text while filtering out matric codes and raw timestamp values
+        $filteredParts = array_filter($parts, function($part) {
+            return !preg_match('/^[B|G]\d+$/i', $part) && !preg_match('/^\d+$/', $part) && strtolower($part) !== 'img';
+        });
+
+        $finalTitle = implode(' ', $filteredParts);
+        
+        // Fallback title generator clause if name was entirely numbers
+        if (empty(trim($finalTitle))) {
+            return "Database Normalization Explained";
         }
         
-        return $cleanTitle;
+        return ucwords(trim($finalTitle));
     }
 }
 ?>
