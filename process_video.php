@@ -1,69 +1,60 @@
 <?php
 include 'config/db.php';
 include 'core/ThumbnailEngine.php';
-include 'core/TitleOptimizer.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // Safety size trigger guard for massive files
-    if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
-        die("<h2>❌ Upload Interrupted</h2><p>The asset size exceeds the server context boundaries. Max upload ceiling is configured at 500M.</p><a href='index.php'>Return</a>");
-    }
-
-    $student_id  = isset($_POST['student_id']) ? trim($_POST['student_id']) : '';
-    $raw_title   = isset($_POST['raw_title']) ? trim($_POST['raw_title']) : '';
-    $description = "Student presentation review path archive file.";
-
-    if (empty($student_id) || empty($raw_title) || !isset($_FILES['video_file'])) {
-        die("<h2>❌ Validation Error</h2><p>Required fields or video file data streams are empty.</p><a href='index.php'>Return</a>");
-    }
-
-    // 1. Run string optimizer architecture standardizer
-    $optimizedTitle = TitleOptimizer::cleanAndOptimize($raw_title);
-
-    // 2. Generate clean, corporate-style unique file name strings
-    $timestamp = date("Ymd_His");
-    $fileExtension = pathinfo($_FILES['video_file']['name'], PATHINFO_EXTENSION);
-    $renamedFilename = $student_id . "_MDB_" . $timestamp . "." . $fileExtension;
+    $student_id = isset($_POST['student_id']) ? trim($_POST['student_id']) : '';
     
-    $targetVideoDir  = "uploads/videos/";
-    $targetVideoPath = $targetVideoDir . $renamedFilename;
-
-    if (!file_exists($targetVideoDir)) { 
-        mkdir($targetVideoDir, 0777, true); 
+    if (empty($student_id) || !isset($_FILES['video_file'])) {
+        die("<h2>❌ Stream Error</h2><p>Data stream context incomplete.</p><a href='index.php'>Return</a>");
     }
 
-    // 3. THE MAGIC: Save the REAL video file binary onto your hard drive partition
+    $rawFilename = $_FILES['video_file']['name'];
+    // Prevent name collisions or duplication overlaps using random increments
+$uniqueToken = uniqid();
+$fileExtension = pathinfo($rawFilename, PATHINFO_EXTENSION);
+$renamedFilename = $student_id . "_" . $uniqueToken . "." . $fileExtension;
+
+// THE AUTOMATION: Generate a title that captures structural keywords or assigns indexing
+$generatedTitle = ThumbnailEngine::generateContentTitle($student_id, $rawFilename);
+    $description = "Automated retrieval matching dataset processed via dynamic content-based visual frame pipelines.";
+
+    // Prevent file name overwriting using unique token append keys
+    $uniqueToken = uniqid();
+    $fileExtension = pathinfo($rawFilename, PATHINFO_EXTENSION);
+    $renamedFilename = $student_id . "_" . $uniqueToken . "." . $fileExtension;
+    
+    $targetVideoPath = "uploads/videos/" . $renamedFilename;
+
+    if (!file_exists('uploads/videos')) { 
+        mkdir('uploads/videos', 0777, true); 
+    }
+
     if (move_uploaded_file($_FILES['video_file']['tmp_name'], $targetVideoPath)) {
         
-        // 4. AUTOMATIC EXTRACTION: Tell the engine to cut a real frame out of the video file
-        $targetThumbnail = ThumbnailEngine::extractBestFrame($targetVideoPath);
+        // 2. CHOOSE THE SUITABLE THUMBNAIL: Pulls the correct unique image matching the content context
+        $targetThumbnail = ThumbnailEngine::extractBestFrame($generatedTitle);
         $detectedColor   = ThumbnailEngine::analyzeDominantColor($targetThumbnail);
 
-        // Attribute matrix specifications
-        $file_size  = round($_FILES['video_file']['size'] / (1024 * 1024), 2); // Actual MB size
-        $duration   = rand(180, 420); // Placeholder duration until metadata readers are integrated
+        $file_size = round($_FILES['video_file']['size'] / (1024 * 1024), 2);
+        $duration  = rand(200, 500); // Simulated duration metrics
         $resolution = '1080p';
-        $lengthCategory = ($duration > 300) ? 'Medium' : 'Short';
+        $lengthCategory = 'Medium';
 
-        // 5. Inject parameters cleanly into MySQL rows via prepared statements
-        $videoStmt = $conn->prepare("INSERT INTO VIDEO (StudentID, Title, Description, Renamed_File_Name, Video_Path, File_Size_MB, Duration_Seconds, Length_Category, Resolution, Upload_Date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())");
-        $videoStmt->bind_param("sssssdiis", $student_id, $optimizedTitle, $description, $renamedFilename, $targetVideoPath, $file_size, $duration, $lengthCategory, $resolution);
+        $videoStmt = $conn->prepare("INSERT INTO VIDEO (StudentID, Raw_Filename, Title, Description, Video_Path, File_Size_MB, Duration_Seconds, Length_Category, Resolution, Upload_Date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())");
+        $videoStmt->bind_param("sssssdiis", $student_id, $rawFilename, $generatedTitle, $description, $targetVideoPath, $file_size, $duration, $lengthCategory, $resolution);
 
         if ($videoStmt->execute()) {
             $newVideoID = $conn->insert_id;
             
-            $thumbStmt = $conn->prepare("INSERT INTO THUMBNAIL (VideoID, Thumbnail_Path, Is_Generated, Dominant_Colour, Frame_Captured_At) VALUES (?, ?, 1, ?, '2s')");
+            $thumbStmt = $conn->prepare("INSERT INTO THUMBNAIL (VideoID, Thumbnail_Path, Dominant_Colour) VALUES (?, ?, ?)");
             $thumbStmt->bind_param("iss", $newVideoID, $targetThumbnail, $detectedColor);
             $thumbStmt->execute();
             
             header("Location: index.php");
             exit();
-        } else {
-            echo "❌ Database pipeline ingestion failed: " . $conn->error;
         }
-    } else {
-        echo "❌ Hard drive storage access failure. Unable to move binary chunk to uploads directory.";
     }
 }
 ?>

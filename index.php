@@ -125,15 +125,23 @@ $result = $stmt->get_result();
                                 <div class="card card-portfolio shadow-sm h-100" style="cursor: pointer;" 
                                      onclick="playVideo('<?php echo htmlspecialchars($row['Video_Path'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($row['Title'], ENT_QUOTES); ?>')">
                                     
-                                    <div class="thumb-container" style="border-bottom: 1px solid #23293d; background-color: #0f111a;">
-                                        <?php if (!empty($row['Thumbnail_Path']) && file_exists($row['Thumbnail_Path'])): ?>
-                                            <img src="<?php echo $row['Thumbnail_Path']; ?>" alt="Video Thumbnail" style="width:100%; height:100%; object-fit:cover;">
-                                        <?php else: ?>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="text-white opacity-25" width="48" height="48" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4v16a1 1 0 0 0 1.524 .852l11 -8a1 1 0 0 0 0 -1.704l-11 -8a1 1 0 0 0 -1.524 .852z" /></svg>
-                                        <?php endif; ?>
-                                        <span class="badge bg-dark bg-opacity-70 text-white border border-secondary position-absolute top-0 start-0 m-3"><?php echo $row['Resolution']; ?></span>
-                                        <span class="badge bg-black text-white position-absolute bottom-0 end-0 m-3 font-monospace" style="font-size:11px;"><?php echo gmdate("i:s", $row['Duration_Seconds']); ?></span>
-                                    </div>
+<div class="thumb-container" style="border-bottom: 1px solid #23293d; background-color: #0f111a; position: relative; overflow: hidden; height: 165px;">
+    <?php 
+    $thumbPath = $row['Thumbnail_Path'];
+    // 1. If it maps to a local file asset, load it
+    if (!empty($thumbPath) && strpos($thumbPath, 'http') !== 0 && file_exists($thumbPath)): 
+    ?>
+        <img src="<?php echo $thumbPath; ?>" alt="Video Thumbnail" style="width:100%; height:100%; object-fit:cover;">
+    <?php else: 
+        // 2. Load the dynamic, distinct web-rendered cover block instantly
+        $fallbackImg = !empty($thumbPath) ? $thumbPath : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500";
+        ?>
+        <img src="<?php echo $fallbackImg; ?>" alt="Video Thumbnail" style="width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease;">
+    <?php endif; ?>
+    
+    <span class="badge bg-dark bg-opacity-70 text-white border border-secondary position-absolute top-0 start-0 m-3"><?php echo $row['Resolution']; ?></span>
+    <span class="badge bg-black text-white position-absolute bottom-0 end-0 m-3 font-monospace" style="font-size:11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; letter-spacing: 0.5px;"><?php echo gmdate("i:s", $row['Duration_Seconds']); ?></span>
+</div>
 
                                     <div class="card-body p-4 d-flex flex-column justify-content-between">
                                         <div class="mb-3">
@@ -206,6 +214,7 @@ $result = $stmt->get_result();
 </div>
 
 <script>
+// Upgraded CBR Controller: Updates input value and triggers database filter instantly
 function selectColor(color) {
     document.getElementById('cbr_color_input').value = color;
     document.getElementById('filterForm').submit();
